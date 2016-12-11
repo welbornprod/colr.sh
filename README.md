@@ -46,7 +46,8 @@ They also have convenient names for the lighter versions. Just prepend `light`
 to an existing name:
 
 ```bash
-# This is the same as: 
+source colr.sh
+# This is the same as:
 # echo -e "$(colr "This is a test" "lightblue")"
 echo -e "${fore[lightblue]}This is a test.${fore[reset]}"
 ```
@@ -69,6 +70,7 @@ style[normal]=22
 ### Raw Escape Code Example Usage
 
 ```bash
+source colr.sh
 echo -e "${fore[red]}${style[bright]}Test${style[reset]}"
 ```
 
@@ -127,6 +129,7 @@ code associative arrays, and is generally not needed except for that use.
 
 #### Example
 ```bash
+source colr.sh
 # Build the same escape code found in ${fore[red]}.
 escapecode="$(codeformat 31)"
 ```
@@ -142,6 +145,7 @@ not needed except for that use.
 
 #### Example
 ```bash
+source colr.sh
 # Build the same escape code found in ${back[155]}.
 escapecode="$(extbackformat 155)"
 ```
@@ -157,6 +161,7 @@ not needed except for that use.
 
 #### Example
 ```bash
+source colr.sh
 # Build the same escape code found in ${fore[125]}.
 escapecode="$(extforeformat 125)"
 ```
