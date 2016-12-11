@@ -30,16 +30,17 @@ The `fore` and `back` arrays have numbered keys for all 256-color codes, and
 named keys for basic colors.
 
 ```bash
-fore[black]=0
-fore[red]=1
-fore[green]=2
-fore[yellow]=3
-fore[blue]=4
-fore[magenta]=5
-fore[cyan]=6
-fore[white]=7
-# fore[reset] will be the code to reset all colors.
-# The same is done for the `back` array.
+# Example keys/values after sourcing colr.sh.
+fore[black]="\033[30m"
+fore[red]="\033[31m"
+fore[green]="\033[32m"
+fore[yellow]="\033[33m"
+fore[blue]="\033[34m"
+fore[magenta]="\033[35m"
+fore[cyan]="\033[36m"
+fore[white]="\033[37m"
+fore[reset]="\033[39m"
+# The same is done for the `back` array, with the appropriate code numbers.
 ```
 
 They also have convenient names for the lighter versions. Just prepend `light`
@@ -57,14 +58,15 @@ echo -e "${fore[lightblue]}This is a test.${fore[reset]}"
 The `style` array has style names for keys.
 
 ```bash
-style[reset]=0
-style[bright]=1
-style[dim]=2
-style[italic]=3
-style[underline]=4
-style[flash]=5
-style[highlight]=7
-style[normal]=22
+# Example keys/values after sourcing colr.sh.
+style[reset]="\033[0m"
+style[bright]="\033[1m"
+style[dim]="\033[2m"
+style[italic]="\033[3m"
+style[underline]="\033[4m"
+style[flash]="\033[5m"
+style[highlight]="\033[7m"
+style[normal]="\033[22m"
 ```
 
 ### Raw Escape Code Example Usage
