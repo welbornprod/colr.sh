@@ -226,7 +226,7 @@ if [[ "$0" == "$BASH_SOURCE" ]]; then
     if ((do_list)); then
         printf "Fore/Back:\n"
         cnt=1
-        declare -a sortednames=($(printf "%s\n" "${!fore[@]}" | sort))
+        declare -a sortednames=($(printf "%s\n" "${!fore[@]}" | sort -n))
         for name in "${sortednames[@]}"; do
             printf "%s " "$(colr "$(printf "%12s" "$name")" "$name")"
             ((cnt == 7)) && { printf "\n"; cnt=0; }
