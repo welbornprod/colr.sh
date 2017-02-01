@@ -6,7 +6,7 @@
 
 # Variables are namespaced to not interfere when sourced.
 colr_app_name="Colr"
-colr_app_version="0.1.1"
+colr_app_version="0.2.0"
 colr_app_path="$(readlink -f "${BASH_SOURCE[0]}")"
 colr_app_script="${colr_app_path##*/}"
 
@@ -194,6 +194,7 @@ export style
 if [[ "$0" == "$BASH_SOURCE" ]]; then
     declare -a userargs
     do_forced=0
+    do_list=0
     for arg; do
         case "$arg" in
             "-f"|"--force" )
@@ -202,6 +203,9 @@ if [[ "$0" == "$BASH_SOURCE" ]]; then
             "-h"|"--help" )
                 print_usage ""
                 exit 0
+                ;;
+            "-l"|"--liststyles" )
+                do_list=1
                 ;;
             "-v"|"--version" )
                 echo -e "$colr_app_name v. $colr_app_version\n"
@@ -219,5 +223,25 @@ if [[ "$0" == "$BASH_SOURCE" ]]; then
     # Script was executed.
     # Automatically disable colors if stdout is not a tty, unless forced.
     ((do_forced)) || colr_auto_disable 1
-    colr "${userargs[@]}"
+    if ((do_list)); then
+        printf "Fore/Back:\n"
+        cnt=1
+        declare -a sortednames=($(printf "%s\n" "${!fore[@]}" | sort))
+        for name in "${sortednames[@]}"; do
+            printf "%s " "$(colr "$(printf "%12s" "$name")" "$name")"
+            ((cnt == 7)) && { printf "\n"; cnt=0; }
+            let cnt+=1
+        done
+        printf "\nStyles:\n"
+        cnt=1
+        sortednames=($(printf "%s\n" "${!style[@]}" | sort))
+        for name in "${sortednames[@]}"; do
+            printf "%s " "$(colr "$(printf "%12s" "$name")" "reset" "reset" "$name")"
+            ((cnt == 4)) && { printf "\n"; cnt=0; }
+            let cnt+=1
+        done
+        printf "\n"
+    else
+        colr "${userargs[@]}"
+    fi
 fi
