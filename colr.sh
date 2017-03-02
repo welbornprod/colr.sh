@@ -6,7 +6,7 @@
 
 # Variables are namespaced to not interfere when sourced.
 colr_app_name="Colr"
-colr_app_version="0.2.0"
+colr_app_version="0.2.1"
 colr_app_path="$(readlink -f "${BASH_SOURCE[0]}")"
 colr_app_script="${colr_app_path##*/}"
 
@@ -167,21 +167,24 @@ function colr_disable {
 function print_usage {
     # Show usage reason if first arg is available.
     [[ -n "$1" ]] && echo -e "\n$1\n"
+    local b="${fore[blue]}" B="${style[bright]}" R="${style[reset]}"
+    local g="${fore[green]}" y="${fore[yellow]}"
+    local name=$colr_app_name script=$colr_app_script ver=$colr_app_version
+    echo "${b}${B}\
+${name} v. ${ver}${R}
 
-    echo "${fore[blue]}${style[bright]}$colr_app_name v. $colr_app_version${style[reset]}
-
-    Usage:${fore[magenta]}
-        $colr_app_script -h | -v
-        $colr_app_script TEXT FORE [BACK] [STYLE]
-    ${style[reset]}
-    Options:${fore[green]}
-        BACK          : Name of back color for the text.
-        FORE          : Name of fore color for the text.
-        STYLE         : Name of style for the text.
-        TEXT          : Text to colorize.
-        -h,--help     : Show this message.
-        -v,--version  : Show $colr_app_name version and exit.
-    ${style[reset]}
+    Usage:${b}
+        $script ${y}-h | -v
+        ${b}$script ${y}TEXT FORE [BACK] [STYLE]
+    ${R}
+    Options:$g
+        BACK          ${R}:${g} Name of back color for the text.
+        FORE          ${R}:${g} Name of fore color for the text.
+        STYLE         ${R}:${g} Name of style for the text.
+        TEXT          ${R}:${g} Text to colorize.
+        -h,--help     ${R}:${g} Show this message.
+        -v,--version  ${R}:${g} Show ${b}${B}${name}${R}${g} version and exit.
+    ${R}
     "
 }
 
@@ -191,7 +194,7 @@ export fore
 export back
 export style
 
-if [[ "$0" == "$BASH_SOURCE" ]]; then
+if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
     declare -a userargs
     do_forced=0
     do_list=0
