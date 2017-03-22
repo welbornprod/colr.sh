@@ -6,7 +6,7 @@
 
 # Variables are namespaced to not interfere when sourced.
 colr_app_name="Colr"
-colr_app_version="0.2.1"
+colr_app_version="0.3.0"
 colr_app_path="$(readlink -f "${BASH_SOURCE[0]}")"
 colr_app_script="${colr_app_path##*/}"
 
@@ -164,6 +164,25 @@ function colr_disable {
     colr_disabled=1
 }
 
+function echo_err {
+    # Print to stderr.
+    printf "%s " "$@" 1>&2
+    printf "\n" 1>&2
+}
+
+function escape_code_repr {
+    # Print the representation of an escape code,
+    # without escaping (without setting a color, style, etc.)
+    # This will replace all escape codes in a string with their
+    # representation.
+    local escapecode=$1
+    [[ -n "$escapecode" ]] || {
+        echo_err "No argument passed to escape_code_repr."
+        return 1
+    }
+    printf "%s" "${escapecode//$'\033'/$'\\033'}"
+}
+
 function print_usage {
     # Show usage reason if first arg is available.
     [[ -n "$1" ]] && echo -e "\n$1\n"
@@ -174,16 +193,19 @@ function print_usage {
 ${name} v. ${ver}${R}
 
     Usage:${b}
-        $script ${y}-h | -v
+        $script ${y}-h | -l | -L | -v
         ${b}$script ${y}TEXT FORE [BACK] [STYLE]
     ${R}
     Options:$g
-        BACK          ${R}:${g} Name of back color for the text.
-        FORE          ${R}:${g} Name of fore color for the text.
-        STYLE         ${R}:${g} Name of style for the text.
-        TEXT          ${R}:${g} Text to colorize.
-        -h,--help     ${R}:${g} Show this message.
-        -v,--version  ${R}:${g} Show ${b}${B}${name}${R}${g} version and exit.
+        BACK             ${R}:${g} Name of back color for the text.
+        FORE             ${R}:${g} Name of fore color for the text.
+        STYLE            ${R}:${g} Name of style for the text.
+        TEXT             ${R}:${g} Text to colorize.
+        -h,--help        ${R}:${g} Show this message.
+        -L,--listcodes   ${R}:${g} List all colors and escape codes exported
+                           by this script.
+        -l,--liststyles  ${R}:${g} List all colors exported by this script.
+        -v,--version     ${R}:${g} Show ${b}${B}${name}${R}${g} version and exit.
     ${R}
     "
 }
@@ -198,6 +220,7 @@ if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
     declare -a userargs
     do_forced=0
     do_list=0
+    do_listcodes=0
     for arg; do
         case "$arg" in
             "-f"|"--force" )
@@ -206,6 +229,10 @@ if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
             "-h"|"--help" )
                 print_usage ""
                 exit 0
+                ;;
+            "-L"|"--listcodes" )
+                do_listcodes=1
+                do_list=1
                 ;;
             "-l"|"--liststyles" )
                 do_list=1
@@ -226,21 +253,36 @@ if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
     # Script was executed.
     # Automatically disable colors if stdout is not a tty, unless forced.
     ((do_forced)) || colr_auto_disable 1
+    maxwidth=7
+    maxwidthstyle=4
+    namefmt="%s "
+    ((do_listcodes)) && {
+        maxwidth=3
+        maxwidthstyle=3
+        namefmt="%s: "
+    }
     if ((do_list)); then
-        printf "Fore/Back:\n"
+        printf "Fore/Back"
+        ((do_listcodes)) && printf " (fore code shown, use 48;5; for back colors)"
+        printf ":\n"
         cnt=1
         declare -a sortednames=($(printf "%s\n" "${!fore[@]}" | sort -n))
         for name in "${sortednames[@]}"; do
-            printf "%s " "$(colr "$(printf "%12s" "$name")" "$name")"
-            ((cnt == 7)) && { printf "\n"; cnt=0; }
+            # shellcheck disable=SC2059
+            # I am using a variable format on purpose shellcheck.
+            printf "$namefmt" "$(colr "$(printf "%12s" "$name")" "$name")"
+            ((do_listcodes)) && colr "$(printf "%-16s" "$(escape_code_repr "${fore[$name]}")")" "$name"
+            ((cnt == maxwidth)) && { printf "\n"; cnt=0; }
             let cnt+=1
         done
         printf "\nStyles:\n"
         cnt=1
         sortednames=($(printf "%s\n" "${!style[@]}" | sort))
         for name in "${sortednames[@]}"; do
-            printf "%s " "$(colr "$(printf "%12s" "$name")" "reset" "reset" "$name")"
-            ((cnt == 4)) && { printf "\n"; cnt=0; }
+            # shellcheck disable=SC2059
+            printf "$namefmt" "$(colr "$(printf "%12s" "$name")" "reset" "reset" "$name")"
+            ((do_listcodes)) && colr "$(printf "%-16s" "$(escape_code_repr "${style[$name]}")")" "reset" "reset" "$name"
+            ((cnt == maxwidthstyle)) && { printf "\n"; cnt=0; }
             let cnt+=1
         done
         printf "\n"
