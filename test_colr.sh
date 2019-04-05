@@ -8,6 +8,7 @@ apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
 
+# shellcheck source=/home/cj/scripts/bash/colr/colr.sh
 source "$appdir/colr.sh"
 
 function echo_err {

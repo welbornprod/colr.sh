@@ -6,7 +6,7 @@
 
 # Variables are namespaced to not interfere when sourced.
 colr_app_name="Colr"
-colr_app_version="0.3.0"
+colr_app_version="0.3.1"
 colr_app_path="$(readlink -f "${BASH_SOURCE[0]}")"
 colr_app_script="${colr_app_path##*/}"
 
@@ -162,6 +162,18 @@ function colr_enable {
 function colr_disable {
     # Disable colors for the `colr` function.
     colr_disabled=1
+}
+
+function colr_is_disabled {
+    # Returns success code if colr_disabled is non-zero.
+    ((colr_disabled)) && return 0
+    return 1
+}
+
+function colr_is_enabled {
+    # Returns success code if colr_disabled is zero.
+    ((colr_disabled)) && return 1
+    return 0
 }
 
 function echo_err {
