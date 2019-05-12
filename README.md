@@ -1,21 +1,28 @@
 # Colr.sh
 
-A BASH version of [Colr](https://github.com/welbornprod/colr). It provides
-easy terminal colors by executing it or sourcing it into another script.
+A BASH version of [Colr](https://github.com/welbornprod/colr).
+It provides easy terminal colors by executing it or sourcing it into another script.
 
 ## Command Line Usage
 ```
 Usage:
-    colr.sh -h | -v
+    colr.sh -h | -l | -L | -v
     colr.sh TEXT FORE [BACK] [STYLE]
+    colr.sh -r TEXT
 
 Options:
-    BACK          : Name of back color for the text.
-    FORE          : Name of fore color for the text.
-    STYLE         : Name of style for the text.
-    TEXT          : Text to colorize.
-    -h,--help     : Show this message.
-    -v,--version  : Show Colr version and exit.
+    BACK             : Name of back color for the text.
+    FORE             : Name of fore color for the text.
+    STYLE            : Name of style for the text.
+    TEXT             : Text to colorize.
+    -h,--help        : Show this message.
+    -L,--listcodes   : List all colors and escape codes exported
+                       by this script.
+    -l,--liststyles  : List all colors exported by this script.
+    -r,--repr        : Show a representation of escape codes found
+                       in a string.
+                       This may also be used on stdin data.
+    -v,--version     : Show Colr version and exit.
 ```
 
 ## Colors
@@ -121,6 +128,56 @@ colr_disable
 
 Disables colorized output until [colr_enable](#colr_enable) is called again.
 
+### colr_is_disabled
+```bash
+colr_is_disabled
+```
+
+Provides access to the `colr_disabled` variable in command form.
+
+#### Example
+```bash
+source colr.sh
+# Only do something if colr is disabled.
+if colr_is_disabled; then
+    echo "Sorry, no color for you."
+fi
+```
+
+This is equivalent to:
+```bash
+source colr.sh
+# Only do something if colr is disabled.
+if ((colr_disabled)); then
+    echo "Sorry, no color for you."
+fi
+```
+
+### colr_is_enabled
+```bash
+colr_is_enabled
+```
+
+Provides access to the `colr_disabled` variable in reversed command form.
+
+#### Example
+```bash
+source colr.sh
+# Only do something when colr is enabled.
+if colr_is_enabled; then
+    echo -e "$(colr "Yay, colr..." "blue")"
+fi
+```
+
+This is equivalent to:
+```bash
+source colr.sh
+# Only do something when colr is enabled.
+if ((!colr_disabled)); then
+    echo -e "$(colr "Yay, colr..." "blue")"
+fi
+```
+
 ### codeformat
 ```bash
 codeformat NUMBER
@@ -134,6 +191,31 @@ code associative arrays, and is generally not needed except for that use.
 source colr.sh
 # Build the same escape code found in ${fore[red]}.
 escapecode="$(codeformat 31)"
+```
+
+### escape_code_repr
+```bash
+escape_code_repr STRING...
+```
+
+Print the representation of one or more escape-codes/strings, without escaping
+(without setting a color, style, etc.)
+
+This will replace all escape codes in a string with their representation.
+
+It is used to implement `colr.sh --repr` and the `colr.sh` `--list*` options.
+
+#### Example
+```bash
+source colr.sh
+# Print the representation for the color 'blue'
+name="blue"
+repr="$(escape_code_repr "${fore[$name]}")"
+printf "The escape code for %s is: %s\n" "$name" "$repr"
+
+# Reveal escape codes in a string.
+string="This is ${fore[blue]}neat${fore[reset]}."
+printf "Representation: %s\n" "$(escape_code_repr "$string")"
 ```
 
 ### extbackformat

@@ -6,7 +6,7 @@
 
 # Variables are namespaced to not interfere when sourced.
 colr_app_name="Colr"
-colr_app_version="0.3.1"
+colr_app_version="0.4.0"
 colr_app_path="$(readlink -f "${BASH_SOURCE[0]}")"
 colr_app_script="${colr_app_path##*/}"
 
@@ -187,12 +187,16 @@ function escape_code_repr {
     # without escaping (without setting a color, style, etc.)
     # This will replace all escape codes in a string with their
     # representation.
-    local escapecode=$1
-    [[ -n "$escapecode" ]] || {
-        echo_err "No argument passed to escape_code_repr."
+    # Arguments:
+    #   $@ : The escape codes or strings to show.
+    (($#)) || {
+        echo_err "No arguments passed to escape_code_repr."
         return 1
     }
-    printf "%s" "${escapecode//$'\033'/$'\\033'}"
+    local escapecode
+    for escapecode; do
+        printf "%s" "${escapecode//$'\033'/$'\\033'}"
+    done
 }
 
 function print_usage {
@@ -207,6 +211,7 @@ ${name} v. ${ver}${R}
     Usage:${b}
         $script ${y}-h | -l | -L | -v
         ${b}$script ${y}TEXT FORE [BACK] [STYLE]
+        ${b}$script ${y}-r TEXT
     ${R}
     Options:$g
         BACK             ${R}:${g} Name of back color for the text.
@@ -217,9 +222,11 @@ ${name} v. ${ver}${R}
         -L,--listcodes   ${R}:${g} List all colors and escape codes exported
                            by this script.
         -l,--liststyles  ${R}:${g} List all colors exported by this script.
+        -r,--repr        ${R}:${g} Show a representation of escape codes found
+                           in a string.
+                           This may also be used on stdin data.
         -v,--version     ${R}:${g} Show ${b}${B}${name}${R}${g} version and exit.
-    ${R}
-    "
+    ${R}"
 }
 
 
@@ -248,6 +255,9 @@ if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
                 ;;
             "-l"|"--liststyles" )
                 do_list=1
+                ;;
+            "-r"|"--repr" )
+                do_repr=1
                 ;;
             "-v"|"--version" )
                 echo -e "$colr_app_name v. $colr_app_version\n"
@@ -298,6 +308,21 @@ if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
             let cnt+=1
         done
         printf "\n"
+    elif ((do_repr)); then
+        ((${#userargs[@]})) || {
+            # Read lines from stdin.
+            [[ -t 0 ]] && echo -e "\nReading from stdin until EOF (Ctrl + D)...\n"
+            nl=$'\n'
+            while IFS= read -r line; do
+                # Split on spaces.
+                userargs+=("${line}${nl}")
+            done
+        }
+        ((${#userargs[@]})) || {
+            echo -e "\nNo text to work with for --repr.\n" 1>&2
+            exit 1
+        }
+        printf "%s\n" "$(escape_code_repr "${userargs[@]}")"
     else
         colr "${userargs[@]}"
     fi
