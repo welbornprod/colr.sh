@@ -3,7 +3,7 @@
 # Just print some color combos out.
 # -Christopher Welborn 09-25-2015
 appname="test_colr"
-appversion="0.0.2"
+appversion="0.0.3"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
@@ -193,11 +193,38 @@ function print_usage {
     "
 }
 
+function run_tests {
+    # Run any/all test functions.
+    local tests testcmd errs=0
+    declare -a tests=(
+        "test_escape_code_repr"
+    )
+    # Global test count.
+    let test_count="${#tests[@]}"
+    for testcmd in "${tests[@]}"; do
+        printf "%s " "$testcmd"
+        if $testcmd; then
+            printf "...%s\n" "$(colr " passed" "green")"
+        else
+            printf "...%s\n" "$(colr " failed" "red")"
+            let errs+=1
+        fi
+    done
+    return $errs
+}
+
+function test_escape_code_repr {
+    local s='\033[38;5;242mtest\033[39m'
+    local output
+    output="$(escape_code_repr "$(echo -e "$s")")" || return 1
+    [[ "$output" == "$s" ]] || return 1
+    return 0
+}
+
 declare -a ranges
 do_256=0
-
-for arg
-do
+do_test=0
+for arg; do
     case "$arg" in
         "-2"|"--256" )
             do_256=1
@@ -208,6 +235,9 @@ do
             ;;
         "-n"|"--names" )
             do_256=0
+            ;;
+        "-t"|"--test" )
+            do_test=1
             ;;
         "-v"|"--version" )
             echo -e "$appname v. $appversion\n"
@@ -222,7 +252,18 @@ do
     esac
 done
 
-if ((${#ranges[@]} > 0)); then
+if ((do_test)); then
+    # Actual count is set in `run_tests`.
+    let test_count=0
+    run_tests
+    let errs=$?
+    ((errs)) && {
+        printf "\n%s: %s/%s\n" "$(colr "Failures" "red")" "$errs" "$test_count"
+        exit 1
+    }
+    printf "\n%s (%s/%s).\n" "$(colr "All tests passed" "green")" "$test_count" "$test_count"
+    exit 0
+elif ((${#ranges[@]} > 0)); then
     # User has passed some range args.
     print_ranges "${ranges[0]:-0}" "${ranges[1]:-255}" "${ranges[2]:-0}" "${ranges[3]:-255}"
 elif ((do_256)); then
